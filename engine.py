@@ -7,6 +7,16 @@ from Params import args
 from DataHandler import DataHandler
 
 
+
+def reshape(data):
+    row,column,time,cat = data.shape
+    data_reshape = np.zeros((row*column, time, cat))
+    for i in range(row):
+        for j in range(column):
+            data_reshape[i*column+j,:,:] = data[i,j,:,:]
+    return data_reshape
+
+
 class trainer():
     def __init__(self, device):
         self.handler = DataHandler()
@@ -21,6 +31,8 @@ class trainer():
         idx = batIds[0: batch]
         label = self.handler.trnT[:, idx, :]
         label = np.transpose(label, [1, 0, 2])
+        print('label')
+        print(label.shape)
         retLabels = (label >= 0) * 1
         mask = retLabels
         retLabels = label
@@ -66,7 +78,8 @@ class trainer():
             ed = min((i + 1) * args.batch, num)
             batIds = ids[st: ed]
             bt = ed - st
-
+            print('bt')
+            print(bt)
             Infomax_L1 = torch.ones(bt, args.offNum, args.areaNum)
             Infomax_L2 = torch.zeros(bt, args.offNum, args.areaNum)
             Infomax_labels = torch.Tensor(torch.cat((Infomax_L1, Infomax_L2), -1)).to(args.device)
@@ -80,10 +93,17 @@ class trainer():
             DGI_feats = torch.Tensor(feats[:, idx, :, :]).to(args.device)
             feats = torch.Tensor(feats).to(args.device)
             labels = torch.Tensor(labels).to(args.device)
+            print('feat')
+            print('DGI_feats')
+            print(feats.shape)
+            print(DGI_feats.shape)
+
 
             out_local, eb_local, eb_global, Infomax_pred, out_global = self.model(feats, DGI_feats)
             out_local = self.handler.zInverse(out_local)
             out_global = self.handler.zInverse(out_global)
+
+            
             loss = (utils.Informax_loss(Infomax_pred, Infomax_labels) * args.ir) + (utils.infoNCEloss(eb_global, eb_local) * args.cr) + \
                    self.loss(out_local, labels, mask) + self.loss(out_global, labels, mask)
 

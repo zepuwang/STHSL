@@ -2,6 +2,14 @@ import pickle
 import numpy as np
 from Params import args
 
+def reshape(data):
+    row,column,time,cat = data.shape
+    data_reshape = np.zeros((row*column, time, cat))
+    for i in range(row):
+        for j in range(column):
+            data_reshape[i*column+j,:,:] = data[i,j,:,:]
+    return data_reshape
+
 class DataHandler:
     def __init__(self):
         if args.data == 'NYC':
@@ -24,17 +32,22 @@ class DataHandler:
         args.valDays = valT.shape[2]
         args.tstDays = tstT.shape[2]
         args.decay_step = args.trnDays//args.batch
-
-        self.trnT = np.reshape(trnT, [args.areaNum, -1, args.offNum])
-        self.valT = np.reshape(valT, [args.areaNum, -1, args.offNum])
-        self.tstT = np.reshape(tstT, [args.areaNum, -1, args.offNum])
+        for i in range(5):
+            for j in range(5):
+                print(trnT[i,j,2,:])
+                B = np.reshape(trnT, [args.areaNum, -1, args.offNum])
+                print(B[i*5+j,2,:])
+                print(trnT[i,j,2,:]==B[i*5+j,2,:])
+        self.trnT = reshape(trnT)#np.reshape(trnT, [args.areaNum, -1, args.offNum])
+        self.valT = reshape(valT)#np.reshape(valT, [args.areaNum, -1, args.offNum])
+        self.tstT = reshape(tstT)#np.reshape(tstT, [args.areaNum, -1, args.offNum])
         self.mean = np.mean(trnT)
         self.std = np.std(trnT)
         self.mask1, self.mask2, self.mask3, self.mask4 = self.getSparsity()
         self.getTestAreas()
         print('Row:', args.row, ', Col:', args.col)
         print('Sparsity:', np.sum(trnT!=0) / np.reshape(trnT, [-1]).shape[0])
-
+    
     def zScore(self, data):
         return (data - self.mean) / self.std
 

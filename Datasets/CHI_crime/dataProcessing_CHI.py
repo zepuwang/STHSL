@@ -12,7 +12,7 @@ with open('Datasets/CHI_crime/CHI_Crime.csv', 'r') as fs:
 	fs.readline()
 	for line in fs:
 		arr = line.strip().split(',')
-		print(arr)
+		#print(arr)
 
 		timeArray = time.strptime(arr[0], '%m/%d/%Y %I:%M:%S %p')
 		timestamp = time.mktime(timeArray)
